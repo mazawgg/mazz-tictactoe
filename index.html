@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Tic-Tac-Toe Pro - Ultimate Edition by Mazaw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Preloader Screen (0% - 100%) -->
+    <div id="preloader" class="fixed inset-0 bg-[#030305] z-[100] flex flex-col items-center justify-center p-4 transition-opacity duration-700">
+        <div class="w-full max-w-md text-center">
+            <h2 class="font-cyber text-2xl md:text-3xl font-bold mb-2 glow-x tracking-widest">INITIALIZING SYSTEM</h2>
+            <p id="loading-status" class="text-xs text-gray-400 mb-6 font-mono">Loading local audio assets & protocols...</p>
+            
+            <div class="w-full bg-gray-900 border border-cyan-500/30 rounded-full h-4 p-0.5 overflow-hidden mb-4 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+                <div id="loading-bar" class="bg-gradient-to-r from-cyan-500 to-purple-500 h-full rounded-full w-0 transition-all duration-100"></div>
+            </div>
+            <div class="font-cyber text-xl font-bold text-cyan-400" id="loading-percent">0%</div>
+        </div>
+    </div>
+
+    <!-- Smack-Talk / Motivation Floating Toast -->
+    <div id="toast-notif" class="fixed top-6 z-[90] transform -translate-y-20 opacity-0 transition-all duration-500 max-w-md w-full px-4 pointer-events-none">
+        <div class="glass-panel border-l-4 border-rose-500 px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3">
+            <span class="text-2xl" id="toast-icon">🔥</span>
+            <div>
+                <h4 class="font-cyber text-xs text-rose-400 font-bold uppercase" id="toast-title">AI ANNOUNCEMENT</h4>
+                <p class="text-xs md:text-sm text-gray-200" id="toast-message">Lu payah banget bro!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Selection Screen -->
+    <div id="mode-screen" class="fixed inset-0 bg-[#050505] z-50 flex flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-500 pointer-events-none">
+        <h1 class="font-cyber text-4xl md:text-6xl font-bold tracking-wider mb-2 text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            TIC <span class="glow-x">TAC</span> <span class="glow-o">TOE</span>
+        </h1>
+        <p class="text-gray-400 text-sm md:text-base mb-6 tracking-widest uppercase">Cybernetic Arcade Edition by <span class="glow-o">Maz</span><span class="glow-x">Aw</span></p>
+        
+        <div class="flex flex-col gap-3 w-full max-w-sm mb-6">
+            <button onclick="playBtnSound(); startGameMode('pvp')" class="cyber-btn py-3.5 rounded-xl font-cyber font-bold">
+                PLAYER VS PLAYER
+            </button>
+            <button onclick="playBtnSound(); showDifficultyMenu()" class="cyber-btn-alt py-3.5 rounded-xl font-cyber font-bold">
+                PLAYER VS AI
+            </button>
+            <button onclick="playBtnSound(); showSettingsMenu()" class="cyber-btn-wni py-3.5 rounded-xl font-cyber font-bold text-sm">
+                <i class="fa-solid fa-gear"></i> SETTINGS & AUDIO
+            </button>
+        </div>
+
+        <!-- Dashboard Streak & Performance Analytics -->
+        <div class="glass-panel rounded-xl p-4 w-full max-w-sm shadow-xl">
+            <h3 class="font-cyber text-xs text-cyan-400 font-bold uppercase mb-3 tracking-wider flex justify-between items-center">
+                <span>Performance Dashboard (PvE Only)</span>
+                <span id="badge-streak" class="text-[10px] bg-cyan-950 px-2 py-0.5 rounded border border-cyan-500/30">STREAK: 0</span>
+            </h3>
+            <div class="grid grid-cols-2 gap-3 mb-4 text-center">
+                <div class="bg-black/40 p-2.5 rounded-lg border border-white/5">
+                    <span class="text-[10px] text-gray-400 block uppercase">Win Streak</span>
+                    <span class="font-cyber text-lg font-bold text-cyan-400" id="stat-win-streak">0</span>
+                </div>
+                <div class="bg-black/40 p-2.5 rounded-lg border border-white/5">
+                    <span class="text-[10px] text-gray-400 block uppercase">Lose Streak</span>
+                    <span class="font-cyber text-lg font-bold text-rose-500" id="stat-lose-streak">0</span>
+                </div>
+            </div>
+            <div>
+                <span class="text-[10px] text-gray-400 uppercase mb-1 block">Recent Performance Trend</span>
+                <div class="h-10 bg-black/50 rounded-lg flex items-end gap-1 p-1.5" id="perf-graph">
+                    <!-- Dynamic bars generated via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Difficulty Sub-Menu Screen -->
+    <div id="difficulty-screen" class="fixed inset-0 bg-[#050505] z-50 flex flex-col items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-500">
+        <h1 class="font-cyber text-3xl md:text-4xl font-bold tracking-wider mb-2 text-center text-rose-500 drop-shadow-[0_0_15px_rgba(255,0,60,0.5)]">
+            SELECT AI DIFFICULTY
+        </h1>
+        <p class="text-gray-400 text-xs md:text-sm mb-8 tracking-widest uppercase text-center"></p>
+        
+        <div class="flex flex-col gap-4 w-full max-w-sm">
+            <button onclick="playBtnSound(); selectDifficulty('normal')" class="cyber-btn py-3 rounded-xl font-cyber font-bold">
+                1. NORMAL
+            </button>
+            <button onclick="playBtnSound(); selectDifficulty('hard')" class="cyber-btn-alt py-3 rounded-xl font-cyber font-bold">
+                2. HARD
+            </button>
+            <button onclick="playBtnSound(); selectDifficulty('wni')" class="cyber-btn-wni py-3 rounded-xl font-cyber font-bold shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                3. WNI
+            </button>
+            <button onclick="playBtnSound(); backToModeMenu()" class="text-xs text-gray-400 hover:text-white mt-4 transition-colors text-center">
+                ← Back to Main Menu
+            </button>
+        </div>
+    </div>
+
+    <!-- Symbol Selection Screen -->
+    <div id="symbol-screen" class="fixed inset-0 bg-[#050505] z-50 flex flex-col items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-500">
+        <h1 class="font-cyber text-3xl md:text-4xl font-bold tracking-wider mb-2 text-center text-cyan-400 drop-shadow-[0_0_15px_rgba(0,240,255,0.5)]">
+            CHOOSE YOUR SYMBOL
+        </h1>
+        <p class="text-gray-400 text-xs md:text-sm mb-8 tracking-widest uppercase text-center"></p>
+        
+        <div class="flex gap-6 w-full max-w-sm mb-6">
+            <button onclick="playBtnSound(); startAiGameWithSymbol('X')" class="flex-1 cyber-btn py-6 rounded-2xl font-cyber text-4xl font-bold glow-x flex flex-col items-center gap-2">
+                <span>X</span>
+                <span class="text-xs font-sans tracking-normal font-normal text-gray-300">First Turn</span>
+            </button>
+            <button onclick="playBtnSound(); startAiGameWithSymbol('O')" class="flex-1 cyber-btn-alt py-6 rounded-2xl font-cyber text-4xl font-bold glow-o flex flex-col items-center gap-2">
+                <span>O</span>
+                <span class="text-xs font-sans tracking-normal font-normal text-gray-300">Second Turn</span>
+            </button>
+        </div>
+        <button onclick="playBtnSound(); backToDifficultyMenu()" class="text-xs text-gray-400 hover:text-white transition-colors text-center">
+            ← Back to Difficulty Selection
+        </button>
+    </div>
+
+    <!-- Settings Menu Screen -->
+    <div id="settings-screen" class="fixed inset-0 bg-[#050505] z-50 flex flex-col items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-500">
+        <div class="glass-panel p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h2 class="font-cyber text-2xl font-bold mb-4 text-center text-cyan-400">AUDIO SETTINGS</h2>
+            
+            <div class="mb-5">
+                <div class="flex justify-between text-xs font-cyber mb-2">
+                    <span class="text-gray-300">Sound Effects (SFX)</span>
+                    <span id="sfx-val" class="text-cyan-400">80%</span>
+                </div>
+                <input type="range" id="sfx-slider" min="0" max="100" value="80" oninput="updateVolume('sfx', this.value)" class="w-full accent-cyan-400 cursor-pointer">
+            </div>
+
+            <div class="mb-6">
+                <div class="flex justify-between text-xs font-cyber mb-2">
+                    <span class="text-gray-300">Background Music (BGM)</span>
+                    <span id="bgm-val" class="text-cyan-400">30%</span>
+                </div>
+                <input type="range" id="bgm-slider" min="0" max="100" value="30" oninput="updateVolume('bgm', this.value)" class="w-full accent-purple-500 cursor-pointer">
+            </div>
+
+            <button onclick="playBtnSound(); closeSettingsMenu()" class="cyber-btn py-3 rounded-xl font-cyber font-bold w-full text-sm">
+                SAVE & RETURN
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div id="game-container" class="flex flex-col items-center justify-center w-full opacity-0 pointer-events-none transition-opacity duration-500">
+        <header class="text-center mb-6">
+            <div class="flex flex-col md:flex-row items-center justify-between w-full max-w-md px-2 mb-2 gap-2">
+                <button onclick="playBtnSound(); backToMenu()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
+                    ← Back to Main Menu
+                </button>
+                <span id="mode-indicator" class="text-xs font-cyber text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full bg-cyan-950/25">MODE: PVP</span>
+            </div>
+            <h1 class="font-cyber text-3xl md:text-4xl font-bold tracking-wider drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                TIC <span class="glow-x">TAC</span> <span class="glow-o">TOE</span>
+            </h1>
+        </header>
+
+        <!-- Scoreboard -->
+        <div class="glass-panel rounded-2xl flex items-center justify-between px-8 py-4 mb-6 w-full max-w-md shadow-2xl">
+            <div class="flex flex-col items-center transition-all duration-300" id="playerX-card">
+                <span class="font-cyber text-2xl glow-x font-bold">X</span>
+                <span class="text-xs text-gray-400 uppercase mt-1" id="label-x">Player 1</span>
+                <span class="text-2xl font-bold mt-1" id="scoreX">0</span>
+            </div>
+            <div class="text-gray-500 font-cyber text-xl px-4">VS</div>
+            <div class="flex flex-col items-center transition-all duration-300 opacity-50 scale-95" id="playerO-card">
+                <span class="font-cyber text-2xl glow-o font-bold">O</span>
+                <span class="text-xs text-gray-400 uppercase mt-1" id="label-o">Player 2</span>
+                <span class="text-2xl font-bold mt-1" id="scoreO">0</span>
+            </div>
+        </div>
+
+        <!-- Game Board Container -->
+        <div class="relative w-full max-w-[330px] md:max-w-[400px] aspect-square mb-8">
+            <div class="grid grid-cols-3 grid-rows-3 gap-3 w-full h-full" id="board">
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="0"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="1"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="2"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="3"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="4"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="5"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="6"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="7"></div>
+                <div class="board-cell rounded-xl flex items-center justify-center font-cyber text-5xl md:text-7xl" data-index="8"></div>
+            </div>
+            <div id="win-line" class="win-line"></div>
+        </div>
+
+        <button id="restart-btn" onclick="playBtnSound()" class="cyber-btn px-8 py-3 rounded font-cyber font-bold text-sm">
+            RESTART SYSTEM
+        </button>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-500">
+        <div class="glass-panel p-10 rounded-2xl flex flex-col items-center text-center transform scale-90 transition-transform duration-500 max-w-sm w-full mx-4" id="modal-content">
+            <h2 id="result-message" class="font-cyber text-3xl md:text-4xl font-bold mb-4"></h2>
+            <p id="result-submessage" class="text-gray-300 mb-8 text-sm md:text-base"></p>
+            <button id="play-again-btn" onclick="playBtnSound()" class="cyber-btn px-8 py-3 rounded font-cyber font-bold w-full text-sm">
+                PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <!-- Local Audio Elements -->
+    <audio id="audio-button" src="sound/button.mp3" preload="auto"></audio>
+    <audio id="audio-sing" src="sound/sing.mp3" preload="auto"></audio>
+    <audio id="audio-gameover" src="sound/game ovehh.mp3" preload="auto"></audio>
+    <audio id="audio-gamewin" src="sound/game win.mp3" preload="auto"></audio>
+    <audio id="audio-gamedraw" src="sound/game draw.mp3" preload="auto"></audio>
+    <audio id="audio-bgm" src="sound/backsound game.mp3" loop preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
